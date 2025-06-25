@@ -12,6 +12,7 @@ import { ProjectPage } from './components/pages/ProjectPage';
 import { LoginPage } from './components/auth/LoginPage';
 import { AddEditProjectPage } from './components/admin/AddEditProjectPage';
 import { RankProjectsPage } from './components/admin/RankProjectsPage';
+import { LoadingScreen } from './components/ui/LoadingScreen';
 import { useAuth } from './hooks/useAuth';
 import { useProjects } from './hooks/useProjects';
 
@@ -20,6 +21,7 @@ type ViewType = 'home' | 'project' | 'login' | 'add-project' | 'edit-project' | 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('home');
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const [showLoadingScreen, setShowLoadingScreen] = useState(true);
   const { user, loading: authLoading } = useAuth();
   const { getProjectById } = useProjects();
 
@@ -106,6 +108,10 @@ function App() {
     handleNavigate('home');
   }, [handleNavigate]);
 
+  const handleLoadingComplete = useCallback(() => {
+    setShowLoadingScreen(false);
+  }, []);
+
   useEffect(() => {
     if (currentView === 'home') {
       const handleScroll = () => {
@@ -131,6 +137,11 @@ function App() {
       return () => window.removeEventListener('scroll', handleScroll);
     }
   }, [currentView]);
+
+  // Show loading screen first (only on desktop fullscreen)
+  if (showLoadingScreen) {
+    return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
+  }
 
   // Show loading screen while checking auth
   if (authLoading) {

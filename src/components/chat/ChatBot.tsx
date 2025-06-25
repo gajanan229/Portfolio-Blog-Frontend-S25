@@ -2,147 +2,195 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
 import { GlassCard } from '../ui/GlassCard';
-import { NeumorphicInput } from '../ui/NeumorphicInput';
 import type { ChatMessage } from '../../types';
+
+const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:5000';
+if (!BASE_URL) {
+    console.warn("VITE_BASE_URL environment variable not set, using default: http://localhost:5000");
+}
 
 export const ChatBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      text: 'Hi! I\'m Gajanan\'s AI assistant. I can help you learn more about his work, skills, and experience. What would you like to know?',
-      sender: 'bot',
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [threadId, setThreadId] = useState<string | null>(null);
+  const threadId = useRef<string | undefined>(undefined);
+  const [runId, setRunId] = useState<string | undefined>(undefined);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Initialize chat thread
-    const storedThreadId = localStorage.getItem('chatThreadId');
-    if (storedThreadId) {
-      setThreadId(storedThreadId);
-    } else {
-      initializeChat();
-    }
+    createThread().catch((err) => {
+      console.error("Failed to create message thread.", err);
+    });
   }, []);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
+  // Poll for new messages while a run is active
+  useEffect(() => {
+    if (runId === undefined) return;
+    const timer = setInterval(() => {
+      updateMessages().catch(console.error);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [runId]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const initializeChat = async () => {
+  // Creates or reuses a chat thread
+  const createThread = async () => {
+    if (!threadId.current) {
+      const storedThreadId = localStorage.getItem("chatThreadId");
+      if (storedThreadId) {
+        threadId.current = storedThreadId;
+        await updateMessages();
+        return;
+      }
+    }
+    if (threadId.current) return;
+
     try {
-      const response = await fetch('/chat/new', { method: 'POST' });
+      const response = await fetch(`${BASE_URL}/chat/new`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      
       if (response.ok) {
-        const { threadId: newThreadId } = await response.json();
-        setThreadId(newThreadId);
-        localStorage.setItem('chatThreadId', newThreadId);
+        const data = await response.json();
+        threadId.current = data.threadId;
+        localStorage.setItem("chatThreadId", threadId.current!);
+        
+        // Add welcome message for new sessions
+        setMessages([{
+          id: '1',
+          text: 'Hi! I\'m Gajanan\'s AI assistant. I can help you learn more about his work, skills, and experience. What would you like to know?',
+          sender: 'bot',
+          timestamp: new Date(),
+        }]);
       }
     } catch (error) {
-      console.error('Failed to initialize chat:', error);
-      // Mock thread ID for demo
-      const mockThreadId = 'thread_' + Date.now();
-      setThreadId(mockThreadId);
-      localStorage.setItem('chatThreadId', mockThreadId);
+      console.error('Failed to create thread:', error);
+      // Add welcome message even if thread creation fails
+      setMessages([{
+        id: '1',
+        text: 'Hi! I\'m Gajanan\'s AI assistant. I can help you learn more about his work, skills, and experience. What would you like to know?',
+        sender: 'bot',
+        timestamp: new Date(),
+      }]);
+    }
+  };
+
+  // Parse content from OpenAI response format
+  const parseContent = (content: unknown): string => {
+    let text: string;
+    if (typeof content === "string") {
+      text = content;
+    } else if (content && typeof content === "object") {
+      if (Array.isArray(content) && content[0]?.text?.value) {
+        text = content[0].text.value;
+      } else {
+        text = JSON.stringify(content);
+      }
+    } else {
+      text = String(content);
+    }
+    
+    // Remove unwanted patterns
+    text = text.replace(/【\d+:\d+†source】/g, "");
+    
+    return text;
+  };
+
+  // Update messages from backend
+  const updateMessages = async () => {
+    if (!threadId.current) return;
+
+    try {
+      const response = await fetch(`${BASE_URL}/chat/list`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          threadId: threadId.current,
+          runId,
+        }),
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const msgs = data.messages.reverse();
+        
+        // Convert backend messages to our ChatMessage format
+        const formattedMessages: ChatMessage[] = msgs.map((msg: { id?: string; content: unknown; role: string; created_at?: string }, index: number) => ({
+          id: `${msg.id || index}`,
+          text: parseContent(msg.content),
+          sender: msg.role === 'user' ? 'user' : 'bot',
+          timestamp: new Date(msg.created_at || Date.now()),
+        }));
+
+        setMessages(formattedMessages);
+
+        if (runId && data.status === "completed") {
+          setRunId(undefined);
+          setIsTyping(false);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update messages:', error);
+      setIsTyping(false);
+    }
+  };
+
+  // Send message to backend
+  const sendMessageToBackend = async (text: string) => {
+    if (!threadId.current || runId) return;
+
+    try {
+      const response = await fetch(`${BASE_URL}/chat/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          threadId: threadId.current,
+          text,
+        }),
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setRunId(data.runId);
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      setIsTyping(false);
     }
   };
 
   const sendMessage = async () => {
-    if (!inputValue.trim() || !threadId) return;
+    if (!inputValue.trim() || !threadId.current) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
-      text: inputValue,
+      text: inputValue.trim(),
       sender: 'user',
       timestamp: new Date(),
     };
 
+    // Show user message immediately
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsTyping(true);
 
     try {
-      const response = await fetch('/chat/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ threadId, text: inputValue }),
-      });
-
-      if (response.ok) {
-        const { runId } = await response.json();
-        pollForResponse(runId);
-      } else {
-        throw new Error('Failed to send message');
-      }
+      await sendMessageToBackend(userMessage.text);
     } catch (error) {
       console.error('Failed to send message:', error);
-      // Mock response for demo
-      setTimeout(() => {
-        const botResponse: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          text: getBotResponse(inputValue),
-          sender: 'bot',
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, botResponse]);
-        setIsTyping(false);
-      }, 1500);
-    }
-  };
-
-  const pollForResponse = async (runId: string) => {
-    try {
-      const response = await fetch('/chat/list', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ threadId, runId }),
-      });
-
-      if (response.ok) {
-        const { messages: chatMessages, status } = await response.json();
-        
-        if (status === 'completed' && chatMessages.length > 0) {
-          const botMessage = chatMessages[chatMessages.length - 1];
-          const newMessage: ChatMessage = {
-            id: Date.now().toString(),
-            text: botMessage.content,
-            sender: 'bot',
-            timestamp: new Date(),
-          };
-          setMessages(prev => [...prev, newMessage]);
-          setIsTyping(false);
-        } else if (status !== 'completed') {
-          // Continue polling
-          setTimeout(() => pollForResponse(runId), 1000);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to poll for response:', error);
       setIsTyping(false);
-    }
-  };
-
-  const getBotResponse = (input: string): string => {
-    const lowerInput = input.toLowerCase();
-    
-    if (lowerInput.includes('skill') || lowerInput.includes('technology')) {
-      return "Gajanan is proficient in React, TypeScript, Node.js, Python, AWS, Docker, GraphQL, PostgreSQL, TensorFlow, and Blockchain technologies. He's particularly passionate about AI and full-stack development.";
-    } else if (lowerInput.includes('experience') || lowerInput.includes('work')) {
-      return "Gajanan has over 6 years of experience as a full-stack developer. He's currently a Senior Full Stack Developer at TechCorp Innovation, where he leads development of microservices serving 1M+ users and implements AI-driven features.";
-    } else if (lowerInput.includes('project')) {
-      return "Some of Gajanan's notable projects include an AI-Powered Analytics Dashboard, a Blockchain Voting System, and a Real-time Collaboration Tool. Each project showcases his expertise in different areas of technology.";
-    } else if (lowerInput.includes('contact') || lowerInput.includes('reach')) {
-      return "You can contact Gajanan at gajanan@example.com or through the contact form on this website. He's always open to discussing new opportunities and innovative projects!";
-    } else {
-      return "Thanks for your question! Gajanan is a passionate full-stack developer and AI innovator with expertise in modern web technologies. Feel free to ask about his skills, experience, or projects. Is there something specific you'd like to know?";
     }
   };
 
@@ -239,7 +287,7 @@ export const ChatBot: React.FC = () => {
                         {message.sender === 'user' && (
                           <User className="w-4 h-4 mt-0.5 flex-shrink-0 order-last" />
                         )}
-                        <p className="text-sm leading-relaxed">{message.text}</p>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -275,12 +323,16 @@ export const ChatBot: React.FC = () => {
               <div className="p-4 border-t border-white/10">
                 <div className="flex items-center space-x-2">
                   <div className="flex-1">
-                    <NeumorphicInput
-                      placeholder="Type your message..."
-                      value={inputValue}
-                      onChange={setInputValue}
-                      className="text-sm"
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Type your message..."
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        className="w-full px-4 py-3 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-300 shadow-inner shadow-black/20 text-sm"
+                      />
+                    </div>
                   </div>
                   <motion.button
                     onClick={sendMessage}

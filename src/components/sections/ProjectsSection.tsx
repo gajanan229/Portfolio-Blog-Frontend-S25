@@ -75,76 +75,79 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onProjectClick
           {/* Project Preview - 2/3 width */}
           <div className="lg:col-span-2">
             <motion.div
-              className="sticky top-24"
+              className="sticky top-24 h-[500px]"
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              <GlassCard className="p-8 h-[500px] flex items-center justify-center">
-                <AnimatePresence mode="wait">
-                  {hoveredProject ? (
-                    <motion.div
-                      key={hoveredProject}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.3 }}
-                      className="w-full h-full"
-                    >
-                      {(() => {
-                        const project = sortedProjects.find(p => p.id === hoveredProject);
-                        const displayImage = getDisplayImage(project);
-                        return displayImage ? (
-                          <div className="relative w-full h-full rounded-xl overflow-hidden">
-                            <img
-                              src={displayImage}
-                              alt={project?.name}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                            <div className="absolute bottom-6 left-6 right-6">
-                              <h4 className="text-white font-bold text-2xl mb-3">
-                                {project?.name}
-                              </h4>
-                              <p className="text-gray-300 text-base line-clamp-3 mb-4">
-                                {project?.description}
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                {parseLanguages(project?.languages).slice(0, 4).map((tech) => (
-                                  <span
-                                    key={tech}
-                                    className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm text-white"
-                                  >
-                                    {tech}
-                                  </span>
-                                ))}
-                              </div>
+              <AnimatePresence mode="wait">
+                {hoveredProject ? (
+                  <motion.div
+                    key={hoveredProject}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="w-full h-full"
+                  >
+                    {(() => {
+                      const project = sortedProjects.find(p => p.id === hoveredProject);
+                      const displayImage = getDisplayImage(project);
+                      return displayImage ? (
+                        <div className="relative w-full h-full rounded-xl overflow-hidden">
+                          <img
+                            src={displayImage}
+                            alt={project?.name}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                          <div className="absolute bottom-6 left-6 right-6">
+                            <h4 className="text-white font-bold text-2xl mb-3">
+                              {project?.name}
+                            </h4>
+                            <p className="text-gray-300 text-base line-clamp-3 mb-4">
+                              {project?.description}
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {parseLanguages(project?.languages).slice(0, 4).map((tech) => (
+                                <span
+                                  key={tech}
+                                  className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm text-white"
+                                >
+                                  {tech}
+                                </span>
+                              ))}
                             </div>
                           </div>
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-gray-400">
-                            <div className="text-center">
-                              <Code className="w-20 h-20 mx-auto mb-6 opacity-50" />
-                              <p className="text-lg">Preview coming soon</p>
-                            </div>
+                        </div>
+                      ) : (
+                        <GlassCard className="p-8 h-full flex items-center justify-center">
+                          <div className="text-center text-gray-400">
+                            <Code className="w-20 h-20 mx-auto mb-6 opacity-50" />
+                            <p className="text-lg">Preview coming soon</p>
                           </div>
-                        );
-                      })()}
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="text-center text-gray-400"
-                    >
-                      <Code className="w-20 h-20 mx-auto mb-6 opacity-50" />
-                      <p className="text-lg">Hover over a project to see preview</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </GlassCard>
+                        </GlassCard>
+                      );
+                    })()}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, transition: { duration: 0.1 } }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full h-full"
+                  >
+                    <GlassCard className="p-8 h-full flex items-center justify-center">
+                      <div className="text-center text-gray-400">
+                        <Code className="w-20 h-20 mx-auto mb-6 opacity-50" />
+                        <p className="text-lg">Hover over a project to see preview</p>
+                      </div>
+                    </GlassCard>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           </div>
 
@@ -159,6 +162,15 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onProjectClick
             >
               <GlassCard className="p-4 h-full">
                 <div className="h-full overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-thumb-purple-500/30 scrollbar-track-transparent">
+                  {/* Header */}
+                  <div className="border-b border-gray-700/50 pb-3 mb-4">
+                    <h3 className="text-lg font-bold text-white flex items-center justify-between">
+                      <span>Scroll to view all projects</span>
+                      <span className="text-sm font-normal text-purple-400 bg-purple-500/20 px-2 py-1 rounded-full">
+                        {sortedProjects.length} projects
+                      </span>
+                    </h3>
+                  </div>
                   {sortedProjects.map((project, index) => (
                     <motion.div
                       key={project.id}

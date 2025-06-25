@@ -35,10 +35,7 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({ project, onBack, onEdi
   const getAllImages = (project: Project): string[] => {
     const images: string[] = [];
     
-    // Add primary image if it exists
-    if (project.image) {
-      images.push(project.image);
-    }
+    
     
     // Add additional images if they exist and are different from primary
     if (project.images && Array.isArray(project.images)) {
