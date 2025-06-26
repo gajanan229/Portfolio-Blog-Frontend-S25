@@ -74,7 +74,7 @@ export const AboutSection: React.FC = () => {
                   <div className="text-sm text-gray-400">Years Experience</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-pink-400">15+</div>
+                  <div className="text-2xl font-bold text-pink-400">10+</div>
                   <div className="text-sm text-gray-400">Projects Completed</div>
                 </div>
               </div>

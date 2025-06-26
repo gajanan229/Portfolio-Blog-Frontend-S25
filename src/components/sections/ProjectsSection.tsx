@@ -72,8 +72,8 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onProjectClick
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Project Preview - 2/3 width */}
-          <div className="lg:col-span-2">
+          {/* Project Preview - 2/3 width - Hidden on screens smaller than lg (1024px) */}
+          <div className="hidden lg:block lg:col-span-2">
             <motion.div
               className="sticky top-24 h-[500px]"
               initial={{ opacity: 0, x: -50 }}
@@ -151,8 +151,8 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onProjectClick
             </motion.div>
           </div>
 
-          {/* Projects List - 1/3 width */}
-          <div className="lg:col-span-1">
+          {/* Projects List - Full width on mobile, 1/3 width on lg+ */}
+          <div className="col-span-full lg:col-span-1">
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}

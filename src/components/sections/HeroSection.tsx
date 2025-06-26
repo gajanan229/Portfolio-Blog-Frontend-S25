@@ -17,7 +17,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
   ];
 
   return (
-    <section className="min-h-screen flex items-center justify-center relative overflow-hidden">
+    <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-20 pb-16">
       {/* Animated Background */}
       <div className="absolute inset-0">
         <motion.div
@@ -57,7 +57,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
 
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
         <motion.h1
-          className="text-6xl md:text-8xl font-bold mb-8"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold mb-6 sm:mb-8"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
@@ -68,7 +68,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
         </motion.h1>
 
         <motion.div
-          className="text-2xl md:text-4xl font-light text-gray-300 mb-12 h-16"
+          className="text-lg sm:text-xl md:text-2xl lg:text-4xl font-light text-gray-300 mb-8 sm:mb-12 h-12 sm:h-16"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
@@ -77,7 +77,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
         </motion.div>
 
         <motion.p
-          className="text-xl text-gray-400 max-w-2xl mx-auto mb-16 leading-relaxed"
+          className="text-base sm:text-lg lg:text-xl text-gray-400 max-w-2xl mx-auto mb-10 sm:mb-16 leading-relaxed"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}

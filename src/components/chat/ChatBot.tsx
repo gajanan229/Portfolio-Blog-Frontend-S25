@@ -206,7 +206,7 @@ export const ChatBot: React.FC = () => {
       {/* Chat Toggle Button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 rounded-full shadow-lg flex items-center justify-center text-white"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 rounded-full shadow-lg flex items-center justify-center text-white"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         animate={{ 
@@ -227,7 +227,7 @@ export const ChatBot: React.FC = () => {
               exit={{ rotate: 90, opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </motion.div>
           ) : (
             <motion.div
@@ -237,7 +237,7 @@ export const ChatBot: React.FC = () => {
               exit={{ rotate: -90, opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <MessageCircle className="w-6 h-6" />
+              <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -250,7 +250,7 @@ export const ChatBot: React.FC = () => {
             initial={{ opacity: 0, scale: 0.8, y: 100 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 100 }}
-            className="fixed bottom-24 right-6 z-40 w-96 h-[500px]"
+            className="fixed bottom-16 right-2 left-2 sm:bottom-24 sm:right-6 sm:left-auto z-40 sm:w-96 h-[500px] max-w-md sm:max-w-none mx-auto sm:mx-0"
           >
             <GlassCard className="h-full flex flex-col">
               {/* Header */}
