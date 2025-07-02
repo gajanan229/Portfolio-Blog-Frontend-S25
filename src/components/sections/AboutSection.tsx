@@ -51,9 +51,7 @@ export const AboutSection: React.FC = () => {
             <GlassCard className="p-6 h-full relative overflow-hidden" hover>
               {/* Profile Image */}
               <div className="w-24 h-24 mx-auto mb-4 rounded-xl overflow-hidden relative">
-                <img
-                  src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg"
-                  alt="Gajanan V"
+                <img src="/logos/G_Logo.png" alt="Gajanan V Logo"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 to-transparent" />
