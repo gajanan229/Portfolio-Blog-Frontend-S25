@@ -4,6 +4,7 @@ import { Terminal } from 'lucide-react';
 
 interface LoadingScreenProps {
   onLoadingComplete: () => void;
+  isAuthenticating?: boolean;
 }
 
 const MatrixBackground: React.FC = () => {
@@ -50,7 +51,7 @@ const MatrixBackground: React.FC = () => {
   );
 };
 
-const LoadingHeroSection: React.FC<{ progress: number }> = ({ progress }) => {
+const LoadingHeroSection: React.FC<{ progress: number; isAuthenticating?: boolean }> = ({ progress, isAuthenticating }) => {
   const [typedText, setTypedText] = useState('');
   const [showCursor, setShowCursor] = useState(true);
 
@@ -171,8 +172,12 @@ const LoadingHeroSection: React.FC<{ progress: number }> = ({ progress }) => {
             {/* Loading Progress Bar */}
             <div className="absolute bottom-6 left-8 right-8">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-purple-300 text-sm font-mono">Initializing portfolio...</span>
-                <span className="text-purple-300 text-sm font-mono">{Math.round(progress)}%</span>
+                <span className="text-purple-300 text-sm font-mono">
+                  {isAuthenticating && progress >= 100 ? 'Authenticating...' : 'Initializing portfolio...'}
+                </span>
+                <span className="text-purple-300 text-sm font-mono">
+                  {isAuthenticating && progress >= 100 ? '' : `${Math.round(progress)}%`}
+                </span>
               </div>
               <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
                 <motion.div
@@ -193,7 +198,7 @@ const LoadingHeroSection: React.FC<{ progress: number }> = ({ progress }) => {
   );
 };
 
-export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onLoadingComplete }) => {
+export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onLoadingComplete, isAuthenticating = false }) => {
   const [progress, setProgress] = useState(0);
 
   // Check if user is on a project page or other non-home page
@@ -210,7 +215,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onLoadingComplete 
   useEffect(() => {
     // Progress animation (12 seconds)
     const startTime = Date.now();
-    const duration = 8000; // 12 seconds
+    const duration = 6000; // 12 seconds
 
     const updateProgress = () => {
       const elapsed = Date.now() - startTime;
@@ -221,20 +226,33 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onLoadingComplete 
         requestAnimationFrame(updateProgress);
       } else {
         // Wait additional 1-2 seconds after 100% before transitioning
+        // Only complete if auth is also done
         setTimeout(() => {
-          onLoadingComplete();
+          if (!isAuthenticating) {
+            onLoadingComplete();
+          }
         }, 1500);
       }
     };
 
     const animationFrame = requestAnimationFrame(updateProgress);
     return () => cancelAnimationFrame(animationFrame);
-  }, [onLoadingComplete]);
+  }, [onLoadingComplete, isAuthenticating]);
+
+  // Watch for auth completion after initial loading is done
+  useEffect(() => {
+    if (!isAuthenticating && progress >= 100) {
+      const timeout = setTimeout(() => {
+        onLoadingComplete();
+      }, 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [isAuthenticating, progress, onLoadingComplete]);
 
   return (
     <div className="fixed inset-0 bg-gray-900 z-50">
       <MatrixBackground />
-      <LoadingHeroSection progress={progress} />
+      <LoadingHeroSection progress={progress} isAuthenticating={isAuthenticating} />
     </div>
   );
 }; 

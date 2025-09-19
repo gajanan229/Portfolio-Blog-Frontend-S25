@@ -138,22 +138,11 @@ function App() {
     }
   }, [currentView]);
 
-  // Show loading screen first (only on desktop fullscreen)
-  if (showLoadingScreen) {
-    return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
+  // Show loading screen first (only on desktop fullscreen) or during auth check
+  if (showLoadingScreen || authLoading) {
+    return <LoadingScreen onLoadingComplete={handleLoadingComplete} isAuthenticating={authLoading} />;
   }
 
-  // Show loading screen while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white flex items-center justify-center">
-        <div className="animate-pulse text-center">
-          <div className="h-8 bg-gray-700 rounded w-64 mx-auto mb-4"></div>
-          <div className="h-4 bg-gray-700 rounded w-96 mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
 
   // Render different views based on current state
   if (currentView === 'login') {
