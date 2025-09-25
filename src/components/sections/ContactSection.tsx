@@ -19,21 +19,27 @@ export const ContactSection: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/contact', {
+      console.log(formData)
+
+      // Create form data for no-cors mode
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('message', formData.message);
+
+      const response = await fetch(import.meta.env.VITE_APP_SCRIPT, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        mode: 'no-cors',
+        body: formDataToSend,
       });
 
-      if (response.ok) {
-        setIsSubmitted(true);
-        setFormData({ name: '', email: '', message: '' });
-      }
-    } catch (error) {
-      console.error('Failed to send message:', error);
-      // Mock success for demo
+      // With no-cors mode, we can't read the response
+      // So we assume success if no error is thrown
       setIsSubmitted(true);
       setFormData({ name: '', email: '', message: '' });
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      alert('Failed to send message. Please try again or contact me directly.');
     } finally {
       setIsSubmitting(false);
       setTimeout(() => setIsSubmitted(false), 3000);
